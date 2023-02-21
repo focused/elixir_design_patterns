@@ -13,6 +13,7 @@ defmodule DesignPatterns.Functional.Pipeline do
       1
 
   """
+  @spec pipeline([fun]) :: (any -> any)
   def pipeline(funs) when is_list(funs) do
     fn input ->
       List.foldl(funs, input, & &1.(&2))
@@ -31,6 +32,7 @@ defmodule DesignPatterns.Functional.Pipeline do
       2
 
   """
+  @spec pipeline((any -> any), (any -> any)) :: (any -> any)
   def pipeline(fun1, fun2) when is_function(fun1, 1) and is_function(fun2, 1) do
     fn input ->
       input |> then(fun1) |> then(fun2)
