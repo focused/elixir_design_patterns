@@ -48,20 +48,19 @@ defmodule DesignPatterns.Structural.Composite do
     def walk_with_index(
           {type, value, nodes},
           mapper \\ fn n, _ -> n end,
-          filter \\ fn _, _ -> true end
+          filter \\ fn _, _ -> true end,
+          index \\ 0
         )
         when type in @branch_types and is_function(mapper, 2) and is_function(filter, 2) do
       nodes
       |> Enum.with_index()
-      |> Enum.reduce([], fn {node, i}, acc ->
-        case {filter.(node, i), node} do
-          {true, {:leaf, _value}} -> [mapper.(node, i) | acc]
-          {true, node} -> [walk_with_index(node, mapper, filter) | acc]
-          _ -> acc
-        end
+      |> Enum.filter(fn {node, i} -> filter.(node, i) end)
+      |> Enum.with_index(fn {node, _i}, index -> {node, index} end)
+      |> Enum.map(fn
+        {{:leaf, _value} = node, i} -> mapper.(node, i)
+        {node, i} -> walk_with_index(node, mapper, filter, i)
       end)
-      |> Enum.reverse()
-      |> then(&mapper.({type, value, &1}, 0))
+      |> then(&mapper.({type, value, &1}, index))
     end
   end
 

@@ -79,7 +79,7 @@ defmodule DesignPatterns.Structural.CompositeTest do
         _node -> true
       end
 
-      assert @main_menu |> Tree.walk(&draw/1, present?) ==
+      assert Tree.walk(@main_menu, &draw/1, present?) ==
                String.trim("""
                * Main
                  - Discounts
@@ -91,26 +91,31 @@ defmodule DesignPatterns.Structural.CompositeTest do
                """)
     end
 
-    @tag :skip
     test "walk_with_index/3 with custom mapper and filter" do
-      present? = fn
-        {:leaf, %Menu.Item{name: nil}} -> false
-        _node -> true
+      present_with_index? = fn
+        {:leaf, %Menu.Item{name: nil}}, _ -> false
+        _node, _index -> true
       end
 
-      assert @main_menu |> Tree.walk(&draw/1, present?) ==
+      assert Tree.walk_with_index(@main_menu, &draw_with_index/2, present_with_index?) ==
                String.trim("""
-               * Main
-                 - Discounts
-               * Catalog
-                 - Products
-                 - Vendors
-               * Help
-                 - About
+               * 1. Main
+                 - 1. Discounts
+               * 2. Catalog
+                 - 1. Products
+                 - 2. Vendors
+               * 3. Help
+                 - 1. About
                """)
     end
   end
 
   defp draw({:leaf, item}), do: "  - " <> item.name
   defp draw({_type, menu, items}), do: "* " <> menu.name <> "\n" <> Enum.join(items, "\n")
+
+  defp draw_with_index({:leaf, item}, index), do: item_template(index, item.name)
+  defp draw_with_index({_type, menu, items}, index), do: menu_template(index, menu.name, items)
+
+  defp item_template(index, name), do: "  - #{index + 1}. #{name}"
+  defp menu_template(index, name, items), do: "* #{index + 1}. #{name}\n#{Enum.join(items, "\n")}"
 end
